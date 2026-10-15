@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "JSON bridge APIs for QAD master data and approved NSR suppliers. SOAP and NSR credentials remain private behind n8n."
   },
   "servers": [
@@ -239,6 +239,42 @@
           },
           "500": {
             "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/qad-supplier-list": {
+      "post": {
+        "tags": [
+          "QAD"
+        ],
+        "operationId": "listQadSuppliers",
+        "summary": "List QAD suppliers",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Normalized QAD supplier response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QadSupplierResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }
@@ -579,6 +615,88 @@
                 }
               }
             }
+          }
+        ]
+      },
+      "QadSupplierItem": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "t_active": {
+            "type": "string"
+          },
+          "t_address": {
+            "type": "string"
+          },
+          "t_city": {
+            "type": "string"
+          },
+          "t_code": {
+            "type": "string"
+          },
+          "t_email1": {
+            "type": "string"
+          },
+          "t_email2": {
+            "type": "string"
+          },
+          "t_full_name": {
+            "type": "string"
+          },
+          "t_postal_code": {
+            "type": "string"
+          },
+          "t_sort_name": {
+            "type": "string"
+          },
+          "t_type": {
+            "type": "string"
+          },
+          "t_update_date": {
+            "type": "string"
+          }
+        }
+      },
+      "QadSupplierResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "meta"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "const": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "suppliers",
+                  "total"
+                ],
+                "properties": {
+                  "suppliers": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/QadSupplierItem"
+                    }
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "meta": {
+                "$ref": "#/components/schemas/QadMeta"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/QadError"
           }
         ]
       }

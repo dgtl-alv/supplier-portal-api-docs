@@ -6,6 +6,7 @@ The API provides JSON endpoints for:
 
 - QAD Product Master
 - QAD BOM Master
+- QAD Supplier List
 - Approved supplier list from NSR
 - Approved supplier detail from NSR
 
@@ -66,6 +67,18 @@ x-api-key: <SUPPLIER_PORTAL_API_KEY>
 `productcode` is required and limited to 100 characters. Returns normalized QAD component rows in `data.components`.
 
 QAD business failures may return HTTP `200` with `success: false`. Clients must inspect the `success` field.
+
+### QAD Supplier List
+
+```http
+POST /supplier-portal/staging/qad-supplier-list
+Content-Type: application/json
+x-api-key: ***
+
+{}
+```
+
+Returns QAD supplier records in `data.suppliers` and the record count in `data.total`. Supplier fields include code, names, status, type, email, address, city, postal code, and update date.
 
 ### List Suppliers
 
