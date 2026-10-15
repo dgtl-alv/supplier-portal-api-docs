@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "description": "JSON bridge APIs for QAD master data and approved NSR suppliers. SOAP and NSR credentials remain private behind n8n."
   },
   "servers": [
@@ -256,9 +256,30 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": false
+                "additionalProperties": false,
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "description": "Case-insensitive substring search across supplier code, names, emails, address, city, postal code, type, and active status."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 50
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  }
+                }
               },
-              "example": {}
+              "example": {
+                "q": "astra",
+                "limit": 50,
+                "offset": 0
+              }
             }
           }
         },
@@ -276,7 +297,8 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           }
-        }
+        },
+        "description": "Fetches the QAD supplier list, then applies case-insensitive search and pagination in n8n."
       }
     }
   },
@@ -675,7 +697,11 @@
                 "type": "object",
                 "required": [
                   "suppliers",
-                  "total"
+                  "total",
+                  "sourceTotal",
+                  "q",
+                  "limit",
+                  "offset"
                 ],
                 "properties": {
                   "suppliers": {
@@ -685,6 +711,23 @@
                     }
                   },
                   "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "sourceTotal": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total supplier rows returned by QAD before filtering."
+                  },
+                  "q": {
+                    "type": "string"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200
+                  },
+                  "offset": {
                     "type": "integer",
                     "minimum": 0
                   }

@@ -75,10 +75,16 @@ POST /supplier-portal/staging/qad-supplier-list
 Content-Type: application/json
 x-api-key: ***
 
-{}
+{
+  "q": "astra",
+  "limit": 50,
+  "offset": 0
+}
 ```
 
-Returns QAD supplier records in `data.suppliers` and the record count in `data.total`. Supplier fields include code, names, status, type, email, address, city, postal code, and update date.
+All fields are optional. Search is case-insensitive and runs in n8n after QAD returns the complete supplier list. It covers supplier code, names, emails, address, city, postal code, type, and active status. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0.
+
+The response contains paginated rows in `data.suppliers`, filtered count in `data.total`, and unfiltered QAD count in `data.sourceTotal`.
 
 ### List Suppliers
 
