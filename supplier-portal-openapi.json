@@ -1,0 +1,587 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Supplier Portal Integration API",
+    "version": "2.0.0",
+    "description": "JSON bridge APIs for QAD master data and approved NSR suppliers. SOAP and NSR credentials remain private behind n8n."
+  },
+  "servers": [
+    {
+      "url": "https://hfkjs.alvaauto.com/webhook",
+      "description": "n8n staging"
+    }
+  ],
+  "security": [
+    {
+      "HeaderAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "QAD",
+      "description": "QAD master data through private jump host"
+    },
+    {
+      "name": "Suppliers",
+      "description": "Approved supplier data from NSR"
+    }
+  ],
+  "paths": {
+    "/supplier-portal/staging/product-master": {
+      "post": {
+        "tags": [
+          "QAD"
+        ],
+        "operationId": "getProductMaster",
+        "summary": "List QAD product master",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Normalized QAD response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QadProductResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/bom-master": {
+      "post": {
+        "tags": [
+          "QAD"
+        ],
+        "operationId": "getBomMaster",
+        "summary": "Get QAD BOM by product code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "productcode"
+                ],
+                "properties": {
+                  "productcode": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                }
+              },
+              "example": {
+                "productcode": "PRODUCT_CODE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Normalized QAD response; inspect success for business rejection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QadBomResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/list-supplier": {
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "operationId": "listSuppliers",
+        "summary": "List approved suppliers",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "description": "Case-insensitive company-name search"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 50
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  }
+                }
+              },
+              "example": {
+                "q": "Contoh",
+                "limit": 50,
+                "offset": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paginated approved suppliers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UpstreamUnauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "description": "NSR rate limit exceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/detail-supplier": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "operationId": "getSupplier",
+        "summary": "Get approved supplier detail",
+        "parameters": [
+          {
+            "name": "public_id",
+            "in": "query",
+            "required": true,
+            "description": "Opaque 16-character lowercase hexadecimal supplier ID",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            },
+            "example": "a100000000000001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Approved supplier and document checklist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid public_id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UpstreamUnauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Supplier unknown, not approved, or voided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "NSR rate limit exceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "HeaderAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Native n8n Header Auth credential for Supplier Portal clients."
+      }
+    },
+    "responses": {
+      "Forbidden": {
+        "description": "Missing or invalid n8n Header Auth",
+        "content": {
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            },
+            "example": "Authorization data is wrong!"
+          }
+        }
+      },
+      "UpstreamUnauthorized": {
+        "description": "NSR credential missing, invalid, or revoked",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error": {
+        "description": "Request or upstream error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "QadMeta": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "QAD_WSA"
+          },
+          "environment": {
+            "type": "string",
+            "const": "staging"
+          },
+          "operation": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "contentType": {
+            "type": "string"
+          }
+        }
+      },
+      "QadError": {
+        "type": "object",
+        "required": [
+          "success",
+          "error",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "QAD_REJECTED",
+                  "QAD_SOAP_FAULT",
+                  "QAD_HTTP_ERROR",
+                  "QAD_INVALID_RESPONSE"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/QadMeta"
+          }
+        }
+      },
+      "QadProductResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "meta"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "const": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "products",
+                  "total"
+                ],
+                "properties": {
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "meta": {
+                "$ref": "#/components/schemas/QadMeta"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/QadError"
+          }
+        ]
+      },
+      "QadBomResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "meta"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "const": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "components",
+                  "total"
+                ],
+                "properties": {
+                  "components": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "meta": {
+                "$ref": "#/components/schemas/QadMeta"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/QadError"
+          }
+        ]
+      },
+      "SupplierListItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "public_id",
+          "company_name",
+          "contact_name",
+          "contact_email",
+          "contact_phone",
+          "status",
+          "created_at",
+          "approved_at"
+        ],
+        "properties": {
+          "public_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "contact_name": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string",
+            "format": "email"
+          },
+          "contact_phone": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "approved"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "approved_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "SupplierListResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierListItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "DocumentSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_type_name",
+          "status"
+        ],
+        "properties": {
+          "document_type_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_submitted",
+              "submitted",
+              "pending",
+              "checked_ok",
+              "checked_reject"
+            ]
+          }
+        }
+      },
+      "SupplierDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupplierListItem"
+          },
+          {
+            "type": "object",
+            "required": [
+              "rejected_at",
+              "documents"
+            ],
+            "properties": {
+              "rejected_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "documents": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DocumentSummary"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
