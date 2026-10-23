@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "description": "JSON bridge APIs for QAD master data, ailox product-supplier mappings, and approved NSR suppliers. Upstream credentials remain private behind n8n."
   },
   "servers": [
@@ -337,6 +337,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProductListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/aliox-supplier-list": {
+      "post": {
+        "tags": [
+          "ailox"
+        ],
+        "operationId": "listAlioxSuppliers",
+        "summary": "List ailox supplier master",
+        "description": "Reads supplier master rows from ailox. Search and field filters are case-insensitive. Supplier names containing vmoto are excluded.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlioxSupplierListRequest"
+              },
+              "example": {
+                "supplier_name": "PT. Aneka Rubberindo Piranti Sejati",
+                "linked_to_pfep": true,
+                "limit": 50,
+                "offset": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paginated ailox supplier master response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlioxSupplierListResponse"
                 }
               }
             }
@@ -947,6 +988,241 @@
           },
           "meta": {
             "$ref": "#/components/schemas/ProductListMeta"
+          }
+        }
+      },
+      "AlioxSupplierListRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Search supplier code, name, address, city, postcode, state, country, email, contact, type, and status."
+          },
+          "supplier_code": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "supplier_name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "country": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "linked_to_pfep": {
+            "type": "boolean",
+            "description": "When set, include only suppliers with or without PFEP mappings."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      },
+      "AlioxSupplierItem": {
+        "type": "object",
+        "required": [
+          "supplier_code",
+          "supplier_name",
+          "address",
+          "city",
+          "postcode",
+          "state",
+          "country",
+          "email",
+          "contact_name",
+          "contact_phone",
+          "contact_email",
+          "supplier_type",
+          "supplier_status",
+          "lead_time_days",
+          "transportation_time_days",
+          "preorder_time_days",
+          "payment_terms",
+          "days_of_inventory",
+          "changed_on",
+          "pfep_rows"
+        ],
+        "properties": {
+          "supplier_code": {
+            "type": "string"
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "postcode": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "contact_name": {
+            "type": "string"
+          },
+          "contact_phone": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "supplier_type": {
+            "type": "string"
+          },
+          "supplier_status": {
+            "type": "string"
+          },
+          "lead_time_days": {
+            "type": "integer"
+          },
+          "transportation_time_days": {
+            "type": "integer"
+          },
+          "preorder_time_days": {
+            "type": "integer"
+          },
+          "payment_terms": {
+            "type": "integer"
+          },
+          "days_of_inventory": {
+            "type": "integer"
+          },
+          "changed_on": {
+            "type": "string",
+            "description": "Source database timestamp."
+          },
+          "pfep_rows": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "AlioxSupplierListMeta": {
+        "type": "object",
+        "required": [
+          "source",
+          "operation",
+          "total",
+          "count",
+          "limit",
+          "offset",
+          "filters"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "ailox"
+          },
+          "operation": {
+            "type": "string",
+            "const": "listSuppliers"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "filters": {
+            "type": "object",
+            "required": [
+              "q",
+              "supplier_code",
+              "supplier_name",
+              "city",
+              "country",
+              "status",
+              "linked_to_pfep"
+            ],
+            "properties": {
+              "q": {
+                "type": "string"
+              },
+              "supplier_code": {
+                "type": "string"
+              },
+              "supplier_name": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "linked_to_pfep": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "AlioxSupplierListResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlioxSupplierItem"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AlioxSupplierListMeta"
           }
         }
       }

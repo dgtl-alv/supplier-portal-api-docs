@@ -8,6 +8,7 @@ The API provides JSON endpoints for:
 - QAD BOM Master
 - QAD Supplier List
 - ailox Product-Supplier List
+- ailox Supplier Master List
 - Approved supplier list from NSR
 - Approved supplier detail from NSR
 
@@ -109,6 +110,30 @@ x-api-key: <SUPPLIER_PORTAL_API_KEY>
 All fields are optional. `q` searches item number, item name, model, supplier code, and supplier name. Specific fields, including `model`, apply additional case-insensitive substring filters. The response includes `model` as comma-separated model names. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
 
 The response returns rows in `data` and pagination/filter details in `meta`. Empty results return HTTP `200` with `data: []`, `total: 0`, and `count: 0`.
+
+### ailox Supplier Master List
+
+```http
+POST /supplier-portal/staging/aliox-supplier-list
+Content-Type: application/json
+x-api-key: ***
+
+{
+  "q": "rubberindo",
+  "supplier_code": "",
+  "supplier_name": "PT. Aneka Rubberindo Piranti Sejati",
+  "city": "",
+  "country": "",
+  "status": "ACTIVE",
+  "linked_to_pfep": true,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+All fields are optional. `q` searches supplier identity, location, business contact, type, and status fields. Specific fields apply additional case-insensitive substring filters. `linked_to_pfep` selects suppliers with or without PFEP mappings. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
+
+Rows include supplier business details, operational lead-time fields, source update timestamp, and `pfep_rows`. Empty results return HTTP `200` with `data: []`, `total: 0`, and `count: 0`.
 
 ### List Suppliers
 
