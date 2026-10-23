@@ -87,7 +87,7 @@ x-api-key: <SUPPLIER_PORTAL_API_KEY>
 
 All fields are optional. Search is case-insensitive and runs in n8n after QAD returns the complete supplier list. It covers supplier code, names, emails, address, city, postal code, type, and active status. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0.
 
-The response contains paginated rows in `data.suppliers`, filtered count in `data.total`, and unfiltered QAD count in `data.sourceTotal`.
+The response contains paginated rows in `data.suppliers`, filtered count in `data.total`, and unfiltered QAD count in `data.sourceTotal`. QAD contracts remain unchanged until connectivity is repaired.
 
 ### ailox Product-Supplier List
 
@@ -167,7 +167,7 @@ All fields are optional:
 - `limit`: integer from 1 to 200; default 50
 - `offset`: non-negative integer; default 0
 
-Only approved, non-voided suppliers are returned.
+Only approved, non-voided suppliers are returned. Rows are in `data`; pagination and filters are in `meta`.
 
 ### Supplier Detail
 
@@ -176,7 +176,7 @@ GET /supplier-portal/staging/detail-supplier?public_id=a100000000000001
 x-api-key: <SUPPLIER_PORTAL_API_KEY>
 ```
 
-`public_id` is a required opaque identifier containing 16 lowercase hexadecimal characters.
+`public_id` is a required opaque identifier containing 16 lowercase hexadecimal characters. Successful details are in `data`; unknown suppliers return the standard error envelope with HTTP `404`.
 
 ## Architecture
 
@@ -189,6 +189,36 @@ Client
 ```
 
 Clients never send QAD SOAP envelopes or the NSR partner API key.
+
+## Standard Envelope (NSR and ailox)
+
+Successful NSR and ailox endpoints return:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "meta": {}
+}
+```
+
+Workflow-handled errors return:
+
+```json
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "..."
+  },
+  "meta": {}
+}
+```
+
+Validation errors use HTTP `400`; unknown suppliers use `404`; NSR upstream failures use `401`, `429`, `502`, or `504`; internal database failures use `500`. Native n8n Header Auth rejects missing or invalid credentials before workflow execution with HTTP `403` and a plain-text body.
+
+QAD endpoints are excluded from this envelope migration while QAD connectivity is unresolved.
 
 ## Error Behavior
 

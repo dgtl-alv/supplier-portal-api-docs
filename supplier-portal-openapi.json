@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.5.0",
-    "description": "JSON bridge APIs for QAD master data, ailox product-supplier mappings, and approved NSR suppliers. Upstream credentials remain private behind n8n."
+    "version": "3.0.0",
+    "description": "JSON bridge APIs for QAD master data, ailox product/supplier data, and approved NSR suppliers. NSR and ailox endpoints use one success/error envelope; QAD remains unchanged pending connectivity repair."
   },
   "servers": [
     {
@@ -132,7 +132,8 @@
                 "properties": {
                   "q": {
                     "type": "string",
-                    "description": "Case-insensitive company-name search"
+                    "description": "Case-insensitive company-name search",
+                    "maxLength": 100
                   },
                   "limit": {
                     "type": "integer",
@@ -157,7 +158,7 @@
         },
         "responses": {
           "200": {
-            "description": "Paginated approved suppliers",
+            "description": "Standard supplier list success envelope",
             "content": {
               "application/json": {
                 "schema": {
@@ -166,17 +167,68 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
           "401": {
-            "$ref": "#/components/responses/UpstreamUnauthorized"
+            "description": "NSR credential rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
           "429": {
-            "description": "NSR rate limit exceeded"
+            "description": "NSR rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "NSR request or response failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "NSR request timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           },
           "500": {
-            "$ref": "#/components/responses/Error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -203,11 +255,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Approved supplier and document checklist",
+            "description": "Standard supplier detail success envelope",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierDetail"
+                  "$ref": "#/components/schemas/NsrSupplierDetailResponse"
                 }
               }
             }
@@ -217,32 +269,73 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
                 }
               }
             }
           },
           "401": {
-            "$ref": "#/components/responses/UpstreamUnauthorized"
+            "description": "NSR credential rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "description": "Supplier unknown, not approved, or voided",
+            "description": "Supplier not found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
                 }
               }
             }
           },
           "429": {
-            "description": "NSR rate limit exceeded"
+            "description": "NSR rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "NSR request or response failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "NSR request timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           },
           "500": {
-            "$ref": "#/components/responses/Error"
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -343,6 +436,26 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database or internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -384,6 +497,26 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database or internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
           }
         }
       }
@@ -403,7 +536,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "maxLength": 100
+              "maxLength": 100,
+              "minLength": 1
             },
             "example": "A1D001"
           }
@@ -427,7 +561,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AlioxSupplierNotFoundResponse"
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid supplier_code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database or internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
                 }
               }
             }
@@ -695,31 +849,25 @@
       },
       "SupplierListResponse": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
+          "success",
           "data",
-          "total",
-          "limit",
-          "offset"
+          "meta"
         ],
         "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
           "data": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SupplierListItem"
             }
           },
-          "total": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 200
-          },
-          "offset": {
-            "type": "integer",
-            "minimum": 0
+          "meta": {
+            "$ref": "#/components/schemas/NsrSupplierListMeta"
           }
         }
       },
@@ -747,32 +895,64 @@
         }
       },
       "SupplierDetail": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/SupplierListItem"
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "public_id",
+          "company_name",
+          "contact_name",
+          "contact_email",
+          "contact_phone",
+          "status",
+          "created_at",
+          "approved_at",
+          "rejected_at",
+          "documents"
+        ],
+        "properties": {
+          "public_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
           },
-          {
-            "type": "object",
-            "required": [
-              "rejected_at",
-              "documents"
-            ],
-            "properties": {
-              "rejected_at": {
-                "type": [
-                  "string",
-                  "null"
-                ]
-              },
-              "documents": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/DocumentSummary"
-                }
-              }
+          "company_name": {
+            "type": "string"
+          },
+          "contact_name": {
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string",
+            "format": "email"
+          },
+          "contact_phone": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "const": "approved"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "approved_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rejected_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentSummary"
             }
           }
-        ]
+        }
       },
       "QadSupplierItem": {
         "type": "object",
@@ -946,7 +1126,8 @@
             "type": "string",
             "description": "Comma-separated product model names in source order; empty when no model mapping exists."
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ProductListMeta": {
         "type": "object",
@@ -1011,9 +1192,11 @@
               "model": {
                 "type": "string"
               }
-            }
+            },
+            "additionalProperties": false
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ProductListResponse": {
         "type": "object",
@@ -1036,7 +1219,8 @@
           "meta": {
             "$ref": "#/components/schemas/ProductListMeta"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierListRequest": {
         "type": "object",
@@ -1171,7 +1355,8 @@
             "type": "integer",
             "minimum": 0
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierListMeta": {
         "type": "object",
@@ -1246,9 +1431,11 @@
                   "null"
                 ]
               }
-            }
+            },
+            "additionalProperties": false
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierListResponse": {
         "type": "object",
@@ -1271,7 +1458,8 @@
           "meta": {
             "$ref": "#/components/schemas/AlioxSupplierListMeta"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierDetail": {
         "allOf": [
@@ -1338,7 +1526,8 @@
           "supplier_code": {
             "type": "string"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierDetailResponse": {
         "type": "object",
@@ -1358,7 +1547,8 @@
           "meta": {
             "$ref": "#/components/schemas/AlioxSupplierDetailMeta"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "AlioxSupplierNotFoundResponse": {
         "type": "object",
@@ -1394,6 +1584,194 @@
           },
           "meta": {
             "$ref": "#/components/schemas/AlioxSupplierDetailMeta"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiErrorMeta": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "source",
+          "operation"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "NSR",
+              "ailox"
+            ]
+          },
+          "operation": {
+            "type": "string"
+          },
+          "public_id": {
+            "type": "string"
+          },
+          "supplier_code": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_ERROR",
+              "SUPPLIER_NOT_FOUND",
+              "UPSTREAM_UNAUTHORIZED",
+              "UPSTREAM_RATE_LIMITED",
+              "UPSTREAM_INVALID_RESPONSE",
+              "UPSTREAM_ERROR",
+              "UPSTREAM_TIMEOUT",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiErrorEnvelope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "success",
+          "data",
+          "error",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
+          "data": {
+            "type": "null"
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiError"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiErrorMeta"
+          }
+        },
+        "examples": [
+          {
+            "success": false,
+            "data": null,
+            "error": {
+              "code": "VALIDATION_ERROR",
+              "message": "limit must be an integer from 1 to 200"
+            },
+            "meta": {
+              "source": "ailox",
+              "operation": "listProducts"
+            }
+          }
+        ]
+      },
+      "NsrSupplierListMeta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "operation",
+          "total",
+          "count",
+          "limit",
+          "offset",
+          "filters"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "NSR"
+          },
+          "operation": {
+            "type": "string",
+            "const": "listSuppliers"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "filters": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "q"
+            ],
+            "properties": {
+              "q": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "NsrSupplierDetailMeta": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "operation",
+          "public_id"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "NSR"
+          },
+          "operation": {
+            "type": "string",
+            "const": "getSupplierDetail"
+          },
+          "public_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          }
+        }
+      },
+      "NsrSupplierDetailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "success",
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/SupplierDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/NsrSupplierDetailMeta"
           }
         }
       }
