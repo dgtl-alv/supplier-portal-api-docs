@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "description": "JSON bridge APIs for QAD master data, ailox product-supplier mappings, and approved NSR suppliers. Upstream credentials remain private behind n8n."
   },
   "servers": [
@@ -384,6 +384,53 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/supplier-portal/staging/aliox-supplier-detail": {
+      "get": {
+        "tags": [
+          "ailox"
+        ],
+        "operationId": "getAlioxSupplierDetail",
+        "summary": "Get one ailox supplier",
+        "description": "Returns one supplier master row selected by exact, case-insensitive supplier code. Supplier names containing vmoto are excluded.",
+        "parameters": [
+          {
+            "name": "supplier_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "example": "A1D001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlioxSupplierDetailResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Supplier not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlioxSupplierNotFoundResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1223,6 +1270,130 @@
           },
           "meta": {
             "$ref": "#/components/schemas/AlioxSupplierListMeta"
+          }
+        }
+      },
+      "AlioxSupplierDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AlioxSupplierItem"
+          },
+          {
+            "type": "object",
+            "required": [
+              "region",
+              "cc_email",
+              "cc_email_2",
+              "delivery_period",
+              "brand_supply",
+              "note",
+              "created_on",
+              "sync_on"
+            ],
+            "properties": {
+              "region": {
+                "type": "string"
+              },
+              "cc_email": {
+                "type": "string"
+              },
+              "cc_email_2": {
+                "type": "string"
+              },
+              "delivery_period": {
+                "type": "string"
+              },
+              "brand_supply": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              },
+              "created_on": {
+                "type": "string"
+              },
+              "sync_on": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "AlioxSupplierDetailMeta": {
+        "type": "object",
+        "required": [
+          "source",
+          "operation",
+          "supplier_code"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "ailox"
+          },
+          "operation": {
+            "type": "string",
+            "const": "getSupplierDetail"
+          },
+          "supplier_code": {
+            "type": "string"
+          }
+        }
+      },
+      "AlioxSupplierDetailResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/AlioxSupplierDetail"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AlioxSupplierDetailMeta"
+          }
+        }
+      },
+      "AlioxSupplierNotFoundResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "error",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": false
+          },
+          "data": {
+            "type": "null"
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "const": "SUPPLIER_NOT_FOUND"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AlioxSupplierDetailMeta"
           }
         }
       }

@@ -9,6 +9,7 @@ The API provides JSON endpoints for:
 - QAD Supplier List
 - ailox Product-Supplier List
 - ailox Supplier Master List
+- ailox Supplier Detail
 - Approved supplier list from NSR
 - Approved supplier detail from NSR
 
@@ -134,6 +135,17 @@ x-api-key: ***
 All fields are optional. `q` searches supplier identity, location, business contact, type, and status fields. Specific fields apply additional case-insensitive substring filters. `linked_to_pfep` selects suppliers with or without PFEP mappings. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
 
 Rows include supplier business details, operational lead-time fields, source update timestamp, and `pfep_rows`. Empty results return HTTP `200` with `data: []`, `total: 0`, and `count: 0`.
+
+### ailox Supplier Detail
+
+```http
+GET /supplier-portal/staging/aliox-supplier-detail?supplier_code=A1D001
+x-api-key: ***
+```
+
+`supplier_code` is required, case-insensitive, and limited to 100 characters. The response includes supplier business/contact fields, logistics settings, source timestamps, and `pfep_rows`.
+
+Known suppliers return HTTP `200` with `success: true`. Unknown suppliers return HTTP `404` with error code `SUPPLIER_NOT_FOUND`.
 
 ### List Suppliers
 
