@@ -7,10 +7,11 @@ The API provides JSON endpoints for:
 - QAD Product Master
 - QAD BOM Master
 - QAD Supplier List
+- ailox Product-Supplier List
 - Approved supplier list from NSR
 - Approved supplier detail from NSR
 
-SOAP transport to QAD and the NSR partner credential stay private behind n8n.
+SOAP transport to QAD, database access, and the NSR partner credential stay private behind n8n.
 
 ## Documentation
 
@@ -73,7 +74,7 @@ QAD business failures may return HTTP `200` with `success: false`. Clients must 
 ```http
 POST /supplier-portal/staging/qad-supplier-list
 Content-Type: application/json
-x-api-key: ***
+x-api-key: <SUPPLIER_PORTAL_API_KEY>
 
 {
   "q": "astra",
@@ -85,6 +86,28 @@ x-api-key: ***
 All fields are optional. Search is case-insensitive and runs in n8n after QAD returns the complete supplier list. It covers supplier code, names, emails, address, city, postal code, type, and active status. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0.
 
 The response contains paginated rows in `data.suppliers`, filtered count in `data.total`, and unfiltered QAD count in `data.sourceTotal`.
+
+### ailox Product-Supplier List
+
+```http
+POST /supplier-portal/staging/list-product
+Content-Type: application/json
+x-api-key: <SUPPLIER_PORTAL_API_KEY>
+
+{
+  "q": "bolt",
+  "item_number": "",
+  "item_name": "",
+  "supplier_code": "",
+  "supplier_name": "astra",
+  "limit": 50,
+  "offset": 0
+}
+```
+
+All fields are optional. `q` searches item number, item name, supplier code, and supplier name. Specific fields apply additional case-insensitive substring filters. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
+
+The response returns rows in `data` and pagination/filter details in `meta`. Empty results return HTTP `200` with `data: []`, `total: 0`, and `count: 0`.
 
 ### List Suppliers
 

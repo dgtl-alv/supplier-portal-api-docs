@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.2.0",
-    "description": "JSON bridge APIs for QAD master data and approved NSR suppliers. SOAP and NSR credentials remain private behind n8n."
+    "version": "2.3.0",
+    "description": "JSON bridge APIs for QAD master data, ailox product-supplier mappings, and approved NSR suppliers. Upstream credentials remain private behind n8n."
   },
   "servers": [
     {
@@ -24,6 +24,10 @@
     {
       "name": "Suppliers",
       "description": "Approved supplier data from NSR"
+    },
+    {
+      "name": "ailox",
+      "description": "Read-only product and supplier mappings from ailox"
     }
   ],
   "paths": {
@@ -299,6 +303,47 @@
           }
         },
         "description": "Fetches the QAD supplier list, then applies case-insensitive search and pagination in n8n."
+      }
+    },
+    "/supplier-portal/staging/list-product": {
+      "post": {
+        "tags": [
+          "ailox"
+        ],
+        "operationId": "listProducts",
+        "summary": "List ailox product-supplier mappings",
+        "description": "Reads distinct product-supplier mappings from ailox. Search is case-insensitive. Supplier names containing vmoto are excluded.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductListRequest"
+              },
+              "example": {
+                "q": "bolt",
+                "supplier_name": "astra",
+                "limit": 50,
+                "offset": 0
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Paginated product-supplier mappings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
       }
     }
   },
@@ -742,6 +787,153 @@
             "$ref": "#/components/schemas/QadError"
           }
         ]
+      },
+      "ProductListRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Case-insensitive substring search across item number, item name, supplier code, and supplier name."
+          },
+          "item_number": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "item_name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "supplier_code": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "supplier_name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      },
+      "ProductListItem": {
+        "type": "object",
+        "required": [
+          "item_number",
+          "item_name",
+          "supplier_name",
+          "supplier_code"
+        ],
+        "properties": {
+          "item_number": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "supplier_code": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductListMeta": {
+        "type": "object",
+        "required": [
+          "source",
+          "operation",
+          "total",
+          "count",
+          "limit",
+          "offset",
+          "filters"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "ailox"
+          },
+          "operation": {
+            "type": "string",
+            "const": "listProducts"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "filters": {
+            "type": "object",
+            "required": [
+              "q",
+              "item_number",
+              "item_name",
+              "supplier_code",
+              "supplier_name"
+            ],
+            "properties": {
+              "q": {
+                "type": "string"
+              },
+              "item_number": {
+                "type": "string"
+              },
+              "item_name": {
+                "type": "string"
+              },
+              "supplier_code": {
+                "type": "string"
+              },
+              "supplier_name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "required": [
+          "success",
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ProductListMeta"
+          }
+        }
       }
     }
   }
