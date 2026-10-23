@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Supplier Portal Integration API",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "description": "JSON bridge APIs for QAD master data, ailox product-supplier mappings, and approved NSR suppliers. Upstream credentials remain private behind n8n."
   },
   "servers": [
@@ -312,7 +312,7 @@
         ],
         "operationId": "listProducts",
         "summary": "List ailox product-supplier mappings",
-        "description": "Reads distinct product-supplier mappings from ailox. Search is case-insensitive. Supplier names containing vmoto are excluded.",
+        "description": "Reads distinct product-supplier mappings from ailox, including model names resolved from PFEP product-class mappings. Search is case-insensitive. Supplier names containing vmoto are excluded.",
         "requestBody": {
           "required": false,
           "content": {
@@ -324,7 +324,8 @@
                 "q": "bolt",
                 "supplier_name": "astra",
                 "limit": 50,
-                "offset": 0
+                "offset": 0,
+                "model": "P2.0"
               }
             }
           }
@@ -823,6 +824,11 @@
             "type": "integer",
             "minimum": 0,
             "default": 0
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Case-insensitive substring filter for comma-separated product model names."
           }
         }
       },
@@ -831,6 +837,7 @@
         "required": [
           "item_number",
           "item_name",
+          "model",
           "supplier_name",
           "supplier_code"
         ],
@@ -846,6 +853,10 @@
           },
           "supplier_code": {
             "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "description": "Comma-separated product model names in source order; empty when no model mapping exists."
           }
         }
       },
@@ -889,6 +900,7 @@
               "q",
               "item_number",
               "item_name",
+              "model",
               "supplier_code",
               "supplier_name"
             ],
@@ -906,6 +918,9 @@
                 "type": "string"
               },
               "supplier_name": {
+                "type": "string"
+              },
+              "model": {
                 "type": "string"
               }
             }

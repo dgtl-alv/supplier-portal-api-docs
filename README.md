@@ -98,6 +98,7 @@ x-api-key: <SUPPLIER_PORTAL_API_KEY>
   "q": "bolt",
   "item_number": "",
   "item_name": "",
+  "model": "P2.0",
   "supplier_code": "",
   "supplier_name": "astra",
   "limit": 50,
@@ -105,7 +106,7 @@ x-api-key: <SUPPLIER_PORTAL_API_KEY>
 }
 ```
 
-All fields are optional. `q` searches item number, item name, supplier code, and supplier name. Specific fields apply additional case-insensitive substring filters. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
+All fields are optional. `q` searches item number, item name, model, supplier code, and supplier name. Specific fields, including `model`, apply additional case-insensitive substring filters. The response includes `model` as comma-separated model names. `limit` accepts 1–200 and defaults to 50; `offset` defaults to 0. Supplier names containing `vmoto` are excluded.
 
 The response returns rows in `data` and pagination/filter details in `meta`. Empty results return HTTP `200` with `data: []`, `total: 0`, and `count: 0`.
 
